@@ -653,7 +653,7 @@ void Blufi::_wifi_scan_event_handler(void* arg, esp_event_base_t event_base, int
             ESP_LOGW(BLUFI_TAG, "No APs found");
             self->m_ap_records.clear();
         } else {
-            if (static_cast<Blufi*>(arg)->m_scan_should_save_ssid == true) {
+            if (self->m_scan_should_save_ssid) {
                 self->m_ap_records.resize(ap_num);
                 esp_wifi_scan_get_ap_records(&ap_num, self->m_ap_records.data());
 
