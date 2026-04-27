@@ -375,12 +375,30 @@ def release(board_type: str, config_filename: str = "config.json", *, filter_nam
             print("set-target failed", file=sys.stderr)
             sys.exit(1)
 
-        # Append sdkconfig
-        with Path("sdkconfig").open("a", encoding='utf-8') as f:
+        # Append sdkconfig, removing any existing lines with the same key first.
+        # ESP-IDF Kconfig: bool=n must be written as "# CONFIG_X is not set".
+        sdkconfig_path = Path("sdkconfig")
+        existing = sdkconfig_path.read_text(encoding='utf-8')
+        keys_to_override = set()
+        for append in sdkconfig_append:
+            if '=' in append:
+                keys_to_override.add(append.split('=')[0].strip())
+        filtered_lines = [
+            line for line in existing.splitlines(keepends=True)
+            if not any(line.strip().startswith(k) or
+                       line.strip() == f"# {k} is not set"
+                       for k in keys_to_override)
+        ]
+        sdkconfig_path.write_text(''.join(filtered_lines), encoding='utf-8')
+        with sdkconfig_path.open("a", encoding='utf-8') as f:
             f.write("\n")
             f.write("# Append by release.py\n")
             for append in sdkconfig_append:
-                f.write(f"{append}\n")
+                key, val = append.split('=', 1)
+                if val.strip().lower() == 'n':
+                    f.write(f"# {key} is not set\n")
+                else:
+                    f.write(f"{append}\n")
         # Build with macro BOARD_NAME defined to name
         if os.system(f"idf.py -DBOARD_NAME={name} -DBOARD_TYPE={board_type} build") != 0:
             print("build failed")
