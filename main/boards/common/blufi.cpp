@@ -160,6 +160,10 @@ esp_err_t Blufi::deinit() {
     return ret;
 }
 
+bool Blufi::should_defer_deinit() const {
+    return m_success_report_pending;
+}
+
 #ifdef CONFIG_BT_BLUEDROID_ENABLED
 esp_err_t Blufi::_host_init() {
     esp_err_t ret = esp_bluedroid_init();
@@ -780,9 +784,17 @@ void Blufi::_handle_event(esp_blufi_cb_event_t event, esp_blufi_cb_param_t* para
                         info.sta_bssid_set = true;
                         info.sta_ssid = self->m_sta_ssid;
                         info.sta_ssid_len = self->m_sta_ssid_len;
+                        self->m_success_report_pending = true;
                         esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS,
                                                         softap_conn_num, &info);
                         ESP_LOGI(BLUFI_TAG, "connected to WiFi");
+
+                        // Hold the BLE connection open long enough for the Notify to be
+                        // delivered through the mobile BLE stack before disconnecting.
+                        // iOS Core Bluetooth and WeChat Mini Program BLE layers introduce
+                        // extra latency; without this delay the App may miss the frame.
+                        vTaskDelay(pdMS_TO_TICKS(1500));
+                        self->m_success_report_pending = false;
 
                         if (self->m_ble_is_connected) {
                             esp_blufi_disconnect();

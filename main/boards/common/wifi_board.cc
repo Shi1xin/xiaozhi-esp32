@@ -109,8 +109,11 @@ void WifiBoard::OnNetworkEvent(NetworkEvent event, const std::string& data) {
             // Stop timeout timer
             esp_timer_stop(connect_timer_);
 #ifdef CONFIG_USE_ESP_BLUFI_WIFI_PROVISIONING
-            // make sure blufi resources has been released
-            Blufi::GetInstance().deinit();
+            // Defer deinit if a provisioning success report is still in flight;
+            // the connection task will call deinit() after the 1500 ms window.
+            if (!Blufi::GetInstance().should_defer_deinit()) {
+                Blufi::GetInstance().deinit();
+            }
 #endif
             in_config_mode_ = false;
             ESP_LOGI(TAG, "Connected to WiFi: %s", data.c_str());

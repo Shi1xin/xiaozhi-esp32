@@ -41,6 +41,12 @@ public:
      */
     esp_err_t deinit();
 
+    /**
+     * @brief Returns true while a provisioning success report is in flight.
+     * wifi_board should postpone calling deinit() until this clears.
+     */
+    bool should_defer_deinit() const;
+
     // Delete copy constructor and assignment operator for singleton
     Blufi(const Blufi &) = delete;
 
@@ -144,4 +150,5 @@ private:
     std::vector<wifi_ap_record_t> m_ap_records;
     bool m_scan_in_progress = false;
     bool m_scan_should_save_ssid = true;
+    bool m_success_report_pending = false;
 };
