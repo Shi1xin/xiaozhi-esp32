@@ -4,7 +4,9 @@
         {
             "name": "bread-compact-wifi",
             "sdkconfig_append": [
-                "CONFIG_OLED_SSD1306_128X32=y"
+                "CONFIG_OLED_SSD1306_128X32=y",
+                "CONFIG_USE_HOTSPOT_WIFI_PROVISIONING=n",
+                "CONFIG_USE_ESP_BLUFI_WIFI_PROVISIONING=y"
             ]
         },
         {
