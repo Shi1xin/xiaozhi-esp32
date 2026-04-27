@@ -6,6 +6,7 @@
 #include <vector>
 #include "esp_blufi_api.h"
 #include "esp_err.h"
+#include "esp_event.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -26,7 +27,7 @@ public:
      * - If WiFi config mode is active, it uses the existing scan results from WifiConfigurationAp
      * - Otherwise, it performs a dedicated scan without interfering with normal WiFi operations
      */
-    void start_wifi_scan();
+    bool start_wifi_scan(bool send_after_scan = false);
 
     /**
      * @brief Initializes the Bluetooth controller, host, and Blufi profile.
@@ -40,6 +41,8 @@ public:
      * @return ESP_OK on success, otherwise an error code.
      */
     esp_err_t deinit();
+
+    bool should_defer_deinit() const;
 
     // Delete copy constructor and assignment operator for singleton
     Blufi(const Blufi &) = delete;
@@ -134,6 +137,7 @@ private:
     bool m_sta_got_ip;
     bool m_provisioned;
     bool m_deinited;
+    bool m_success_report_pending;
     uint8_t m_sta_bssid[6]{};
     uint8_t m_sta_ssid[32]{};
     int m_sta_ssid_len;
@@ -144,4 +148,7 @@ private:
     std::vector<wifi_ap_record_t> m_ap_records;
     bool m_scan_in_progress = false;
     bool m_scan_should_save_ssid = true;
+    bool m_scan_handler_registered = false;
+    bool m_send_wifi_list_after_scan = false;
+    esp_event_handler_instance_t m_scan_event_instance = nullptr;
 };
