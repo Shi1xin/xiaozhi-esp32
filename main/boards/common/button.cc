@@ -80,6 +80,24 @@ void Button::OnLongPress(std::function<void()> callback) {
     }, this);
 }
 
+void Button::OnLongPress(std::function<void()> callback, uint16_t press_time_ms) {
+    if (button_handle_ == nullptr) {
+        return;
+    }
+    on_long_press_timed_ = std::move(callback);
+    button_event_args_t event_args = {
+        .long_press = {
+            .press_time = press_time_ms
+        }
+    };
+    iot_button_register_cb(button_handle_, BUTTON_LONG_PRESS_START, &event_args, [](void* handle, void* usr_data) {
+        Button* button = static_cast<Button*>(usr_data);
+        if (button->on_long_press_timed_) {
+            button->on_long_press_timed_();
+        }
+    }, this);
+}
+
 void Button::OnClick(std::function<void()> callback) {
     if (button_handle_ == nullptr) {
         return;

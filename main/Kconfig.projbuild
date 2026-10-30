@@ -2,7 +2,7 @@ menu "Xiaozhi Assistant"
 
 config OTA_URL
     string "Default OTA URL"
-    default "https://api.tenclass.net/xiaozhi/ota/"
+    default "https://xrobo.qiniuapi.com/v1/ota/"
     help
         The application will access this URL to check for new firmwares and server address.
 
@@ -649,6 +649,9 @@ choice BOARD_TYPE
     config BOARD_TYPE_WK_ESP32S3_DEV
         bool "WK ESP32-S3 Dev Board (维控智能开发板)"
         depends on IDF_TARGET_ESP32S3
+    config BOARD_TYPE_XATOM
+        bool "X-Atom (Linx)"
+        depends on IDF_TARGET_ESP32S3
     config BOARD_TYPE_XMINI_C3
         bool "Xmini C3"
         depends on IDF_TARGET_ESP32C3
@@ -1068,7 +1071,7 @@ config USE_DEVICE_AEC
         || BOARD_TYPE_WAVESHARE_ESP32_P4_WIFI6_TOUCH_LCD_7 || BOARD_TYPE_WAVESHARE_ESP32_P4_WIFI6_TOUCH_LCD_8 || BOARD_TYPE_WAVESHARE_ESP32_P4_WIFI6_TOUCH_LCD_10_1 \
         || BOARD_TYPE_ESP_VOCAT || BOARD_TYPE_CYBERAI_VOCAT_V2_0 || BOARD_TYPE_CYBERAI_VOCAT_V2_1 \
         || BOARD_TYPE_WAVESHARE_ESP32_S3_TOUCH_LCD_3_49 || BOARD_TYPE_WAVESHARE_ESP32_S3_TOUCH_LCD_3_49_V2 || BOARD_TYPE_WAVESHARE_ESP32_S3_RLCD_4_2 || BOARD_TYPE_WAVESHARE_ESP32_S3_TOUCH_LCD_1_85B || BOARD_TYPE_ZHENGCHEN_CAM || BOARD_TYPE_ZHENGCHEN_CAM_ML307 \
-        || BOARD_TYPE_WAVESHARE_ESP32_S3_TOUCH_LCD_4_3C || BOARD_TYPE_WAVESHARE_ESP32_S3_TOUCH_LCD_1_54 || BOARD_TYPE_WAVESHARE_ESP32_S3_LCD_0_85 || BOARD_TYPE_AI_VOX3 || BOARD_TYPE_WAVESHARE_ESP32_S3_TOUCH_AMOLED_1_43C || BOARD_TYPE_ATK_DNESP32S3_BOX3)
+        || BOARD_TYPE_WAVESHARE_ESP32_S3_TOUCH_LCD_4_3C || BOARD_TYPE_WAVESHARE_ESP32_S3_TOUCH_LCD_1_54 || BOARD_TYPE_WAVESHARE_ESP32_S3_LCD_0_85 || BOARD_TYPE_AI_VOX3 || BOARD_TYPE_WAVESHARE_ESP32_S3_TOUCH_AMOLED_1_43C || BOARD_TYPE_ATK_DNESP32S3_BOX3 || BOARD_TYPE_XATOM)
     help
         To work properly, device-side AEC requires a clean output reference path from the speaker signal and physical acoustic isolation between the microphone and speaker.
 
@@ -1101,6 +1104,14 @@ menu "WiFi Configuration Method"
         help
             Use the PSA Crypto based BluFi security protocol adopted by ESP-IDF 6.
             The provisioning client must support ffdhe3072, SHA-256, and AES-CTR.
+    config BLUFI_INCLUDE_WIFI_MAC_IN_NAME
+        bool "Include WiFi MAC in BluFi device name"
+        default n
+        depends on USE_ESP_BLUFI_WIFI_PROVISIONING && BT_BLUEDROID_ENABLED
+        help
+            Advertise as ESP_<12 lowercase hex WiFi STA MAC>: the primary ADV
+            keeps only the BluFi service UUID, flags and TX power while the
+            full name moves to the scan response.
 endmenu
 
 config AUDIO_DEBUG_UDP_SERVER

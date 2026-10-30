@@ -189,6 +189,14 @@ void WifiBoard::StartWifiConfigMode() {
     auto &blufi = Blufi::GetInstance();
     // initialize esp-blufi protocol
     blufi.init();
+
+    // Announce config mode like the hotspot path does — no-display boards
+    // otherwise give the user no feedback when provisioning starts.
+    Application::GetInstance().Schedule([]() {
+        Application::GetInstance().Alert(Lang::Strings::WIFI_CONFIG_MODE,
+                                         Lang::Strings::ENTERING_WIFI_CONFIG_MODE,
+                                         "gear", Lang::Sounds::OGG_WIFICONFIG);
+    });
 #endif
 }
 

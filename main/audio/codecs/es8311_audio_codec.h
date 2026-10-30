@@ -3,12 +3,14 @@
 
 #include "audio_codec.h"
 
-#include <driver/i2c_master.h>
 #include <driver/gpio.h>
+#include <driver/i2c_master.h>
 #include <esp_codec_dev.h>
 #include <esp_codec_dev_defaults.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <atomic>
 #include <mutex>
-
 
 class Es8311AudioCodec : public AudioCodec {
 private:
@@ -21,8 +23,12 @@ private:
     gpio_num_t pa_pin_ = GPIO_NUM_NC;
     bool pa_inverted_ = false;
     std::mutex data_if_mutex_;
+    // Reference-input mode only: tick of the last device open for the
+    // non-blocking 1000ms ADC settling window.
+    std::atomic<TickType_t> reference_open_tick_{0};
 
-    void CreateDuplexChannels(gpio_num_t mclk, gpio_num_t bclk, gpio_num_t ws, gpio_num_t dout, gpio_num_t din);
+    void CreateDuplexChannels(gpio_num_t mclk, gpio_num_t bclk, gpio_num_t ws, gpio_num_t dout,
+                              gpio_num_t din);
     void ResetCodec();
     void UpdateDeviceState();
 
@@ -30,9 +36,10 @@ private:
     virtual int Write(const int16_t* data, int samples) override;
 
 public:
-    Es8311AudioCodec(void* i2c_master_handle, i2c_port_t i2c_port, int input_sample_rate, int output_sample_rate,
-        gpio_num_t mclk, gpio_num_t bclk, gpio_num_t ws, gpio_num_t dout, gpio_num_t din,
-        gpio_num_t pa_pin, uint8_t es8311_addr, bool use_mclk = true, bool pa_inverted = false);
+    Es8311AudioCodec(void* i2c_master_handle, i2c_port_t i2c_port, int input_sample_rate,
+                     int output_sample_rate, gpio_num_t mclk, gpio_num_t bclk, gpio_num_t ws,
+                     gpio_num_t dout, gpio_num_t din, gpio_num_t pa_pin, uint8_t es8311_addr,
+                     bool use_mclk = true, bool pa_inverted = false, bool input_reference = false);
     virtual ~Es8311AudioCodec();
 
     virtual void SetOutputVolume(int volume) override;
@@ -40,4 +47,4 @@ public:
     virtual void EnableOutput(bool enable) override;
 };
 
-#endif // _ES8311_AUDIO_CODEC_H
+#endif  // _ES8311_AUDIO_CODEC_H
